@@ -2,6 +2,8 @@ package queen;
 
 import org.junit.Test;
 
+import general.General;
+
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertFalse;
 
@@ -198,6 +200,52 @@ public class QueenTest {
         */
         cleanup(qn);
 
+    }
+
+    @Test 
+    public void TestKillBasic()
+    {
+        final int nqueen = 5;
+        final Float[] weights = {0.2f,0.2f,0.2f,0.2f,0.2f}; 
+
+        Queen[] qn = initQueen(nqueen, weights);
+
+        System.out.println("Why Don't we kill Node 3");
+        // should be 0 (inconclusive weight followed by qn[0] queen)
+        qn[0].Start(0);
+        qn[1].Start(1);
+        qn[2].Start(0);
+        qn[3].Start(1);
+        qn[4].Start(0);
+        
+        General.wait_millis(4000);
+        // Kill a process
+        qn[3].Kill();
+
+        waitn(qn, nqueen -1);
+
+        //assertFalse("Expecting 0", qn[0].V != 0);
+        cleanup(qn); 
+
+        qn = initQueen(nqueen, weights);
+
+        System.out.println("Off with her Head! Kill the queen");
+        // should be 0 (inconclusive weight followed by qn[0] queen)
+        qn[0].Start(0);
+        qn[1].Start(1);
+        qn[2].Start(0);
+        qn[3].Start(1);
+        qn[4].Start(0);
+        
+        General.wait_millis(4000);
+        // Kill the queen
+        qn[0].Kill();
+        
+
+        waitn(qn, nqueen -1);
+
+        //assertFalse("Expecting 0", qn[0].V != 0);
+        cleanup(qn); 
     }
     /*
     @Test

@@ -9,6 +9,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.lang.System;
+// for array manipulation
+import java.util.Arrays;
+
 
 import general.General;
 import general.Message;
@@ -23,6 +26,7 @@ public class Queen implements MessageRMI, Runnable {
     int me; // index into peers[]
 
     Float[] weights; // weights indexed the same as the ports. 
+    Boolean[] receivedValue;
 
     Registry registry;
     MessageRMI stub;
@@ -74,8 +78,8 @@ public class Queen implements MessageRMI, Runnable {
          */
         public void run()
         {
-            System.out.println("Node "+me+": Periodic Timer Task called at: "+
-                            System.currentTimeMillis()+"ms");
+            //System.out.println("Node "+me+": Periodic Timer Task called at: "+
+            //                System.currentTimeMillis()+"ms");
             // determine current phase:
             switch(this.get_current_phase()){
                 case 1:
@@ -109,6 +113,8 @@ public class Queen implements MessageRMI, Runnable {
             s0 = 0; 
             s1 = 0; 
             queenValue = null; 
+            // allow another value to be recorded in the next phase
+            Arrays.fill(receivedValue,false); 
         }
 
         public void increment_local_state(){
@@ -131,12 +137,6 @@ public class Queen implements MessageRMI, Runnable {
             this.stateChange = true; 
             stateMutex.unlock();
         }
-        /*
-        public void finish()
-        {
-            this.finished = true;
-        }
-        */
 
         public int get_current_phase(){
             return this.phase;
@@ -150,12 +150,6 @@ public class Queen implements MessageRMI, Runnable {
             return(this.iteration == state2.iteration &&
                    this.phase == state2.phase);
         }
-        /*
-        public boolean is_finished()
-        {
-            return this.finished;
-        }
-        */
     }
     
     LocalState localState;
@@ -188,6 +182,9 @@ public class Queen implements MessageRMI, Runnable {
         this.myValue = null;
         this.queenValue = null;
         this.myWeight = 0; 
+
+        this.receivedValue = new Boolean[peers.length];
+        Arrays.fill(receivedValue,false); 
 
         this.finished = false; 
 
@@ -227,7 +224,7 @@ public class Queen implements MessageRMI, Runnable {
     }
 
     public void run(){
-        System.out.println("Node "+this.me+": Current Time Started: "+System.currentTimeMillis()+"ms"); 
+        // System.out.println("Node "+this.me+": Current Time Started: "+System.currentTimeMillis()+"ms"); 
         // schedule the local state to run at the appropriate phase interval, 
         phaseTimer.schedule(this.localState,phaseInterval,phaseInterval);
         localState.increment_local_state();
@@ -238,8 +235,13 @@ public class Queen implements MessageRMI, Runnable {
             if(this.localState.stateChange == true)
             {
                 // beginning of a new phase
-                System.out.println("Advancing to phase: " + this.localState.phase +
-                                " on iteration: " + this.localState.iteration);
+                //System.out.println("Advancing to phase: " + this.localState.phase +
+                //                " on iteration: " + this.localState.iteration);
+                // Debugging Simply.
+                if(this.me == 0){
+                    System.out.println("Iteration: "+localState.get_current_iteration()+
+                                       "    Phase " + localState.get_current_phase()); 
+                }
                 // set to false;
                 this.localState.stateMutex.lock(); 
                 this.localState.stateChange = false; 
@@ -249,13 +251,13 @@ public class Queen implements MessageRMI, Runnable {
                 switch(this.localState.get_current_phase())
                 {
                     case 1: 
-                        System.out.println("Node "+this.me+": performing exchange phase on interation "+localState.get_current_iteration());
+                        //System.out.println("Node "+this.me+": performing exchange phase on interation "+localState.get_current_iteration());
                         // wait 1 second before beginning (should help keep all messages in phase)
                         General.wait_millis(2000);
                         exchange_value(V);
                         break; 
                     case 2: 
-                        System.out.println("Node "+this.me+": performing queen phase on iteration"+localState.get_current_iteration()); 
+                        //System.out.println("Node "+this.me+": performing queen phase on iteration"+localState.get_current_iteration()); 
                         if(Anchor[localState.get_current_iteration()] == this.me){
                             // i'm the queen
                             System.out.println("Node "+this.me+": I'm the queen!");
@@ -322,28 +324,34 @@ public class Queen implements MessageRMI, Runnable {
     public void Receive(Message msg){
         // am I running? 
         
-        // System.out.println("recevied a message!"); 
-
-        switch(this.localState.get_current_phase())
+        // check to see if the message is received and new: 
+        if(receivedValue[msg.get_peer_id()] == false)
         {
-            case 1: 
-                if(msg.get_value() == 1){
-                    s1 = s1 + this.weights[msg.get_peer_id()];
-                } else {
-                    s0 = s0 + this.weights[msg.get_peer_id()];
-                }
-                break;
-            case 2:
-                if(msg.get_peer_id()==this.Anchor[localState.get_current_iteration()]){
-                    queenValue = msg.get_value(); 
-                }
-                break;
-            default: 
-                System.out.println("ERROR: Phase " + this.localState.get_current_phase() + 
-                "not supported in recevie"); 
+            receivedValue[msg.get_peer_id()] = true; 
+            switch(this.localState.get_current_phase())
+            {
+                case 1: 
+                    if(msg.get_value() == 1){
+                        s1 = s1 + this.weights[msg.get_peer_id()];
+                    } else {
+                        s0 = s0 + this.weights[msg.get_peer_id()];
+                    }
+                    break;
+                case 2:
+                    if(msg.get_peer_id()==this.Anchor[localState.get_current_iteration()]){
+                        queenValue = msg.get_value(); 
+                    }
+                    break;
+                default: 
+                    System.out.println("ERROR: Phase " + this.localState.get_current_phase() + 
+                    "not supported in recevie"); 
+            }
         }
+        else {
+            System.out.println("Message from "+msg.get_peer_id()+" already received in this phase");
+        }
+        
     }
-
 
     /*
     // value of the advance message can be the local state
@@ -390,7 +398,10 @@ public class Queen implements MessageRMI, Runnable {
      * 
      */
     public void Kill(){
+        System.out.println("Node "+this.me+" has been killed");
         this.dead.getAndSet(true);
+        // cancel periodic task too
+        this.phaseTimer.cancel();
         if(this.registry != null){
             try {
                 UnicastRemoteObject.unexportObject(this.registry, true);
