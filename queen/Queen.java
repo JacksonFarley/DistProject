@@ -80,7 +80,7 @@ public class Queen implements MessageRMI, Runnable {
             switch(this.get_current_phase()){
                 case 1:
                     // do the phase 1 transition
-                    if(s1 > s0){
+                    if(s1 > 0.5f){
                         myValue = 1; 
                         myWeight = s1; 
                     } else {
@@ -251,7 +251,7 @@ public class Queen implements MessageRMI, Runnable {
                     case 1: 
                         System.out.println("Node "+this.me+": performing exchange phase on interation "+localState.get_current_iteration());
                         // wait 1 second before beginning (should help keep all messages in phase)
-                        General.wait_millis(1000);
+                        General.wait_millis(2000);
                         exchange_value(V);
                         break; 
                     case 2: 
@@ -259,7 +259,7 @@ public class Queen implements MessageRMI, Runnable {
                         if(Anchor[localState.get_current_iteration()] == this.me){
                             // i'm the queen
                             System.out.println("Node "+this.me+": I'm the queen!");
-                            General.wait_millis(1000);
+                            General.wait_millis(2000);
                             exchange_value(myValue);
                         }
                         break; 
@@ -333,7 +333,10 @@ public class Queen implements MessageRMI, Runnable {
                     s0 = s0 + this.weights[msg.get_peer_id()];
                 }
                 break;
-            case 2: 
+            case 2:
+                if(msg.get_peer_id()==this.Anchor[localState.get_current_iteration()]){
+                    queenValue = msg.get_value(); 
+                }
                 break;
             default: 
                 System.out.println("ERROR: Phase " + this.localState.get_current_phase() + 
