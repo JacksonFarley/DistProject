@@ -1,4 +1,4 @@
-package queen;
+package gradecast;
 
 import org.junit.Test;
 
@@ -13,15 +13,15 @@ import static org.junit.Assert.assertFalse;
  * This is a subset of entire test cases
  * For your reference only.
  */
-public class QueenTest {
+public class GradeCastTest {
 
-    private int ndecided(Queen[] qn){
+    private int ndecided(GradeCast[] gc){
         int counter = 0;
         Object v = null;
-        Queen.retStatus ret;
-        for(int i = 0; i < qn.length; i++){
-            if(qn[i] != null){
-                ret = qn[i].Status();
+        GradeCast.retStatus ret;
+        for(int i = 0; i < gc.length; i++){
+            if(gc[i] != null){
+                ret = gc[i].Status();
                 if(ret.state == true) {
                     assertFalse("decided values do not match: i=" + i + " v=" + v + " v1=" + ret.v, counter > 0 && !v.equals(ret.v));
                     counter++;
@@ -33,10 +33,10 @@ public class QueenTest {
         return counter;
     }
 
-    private void waitn(Queen[] qn, int wanted){
+    private void waitn(GradeCast[] gc, int wanted){
         int to = 10;
         for(int i = 0; i < 30; i++){
-            if(ndecided(qn) >= wanted){
+            if(ndecided(gc) >= wanted){
                 break;
             }
             try {
@@ -49,16 +49,16 @@ public class QueenTest {
             }
         }
 
-        int nd = ndecided(qn);
+        int nd = ndecided(gc);
         assertFalse("too few decided; ndecided=" + nd + " wanted=" + wanted, nd < wanted);
 
     }
 
-    private void waitn_iter(Queen[] qn, int wanted, int num_iterations)
+    private void waitn_iter(GradeCast[] gc, int wanted, int num_iterations)
     {
         int to = 1000;
         for(int i = 0; i < (10*num_iterations+5); i++){
-            if(ndecided(qn) >= wanted){
+            if(ndecided(gc) >= wanted){
                 break;
             }
             try {
@@ -69,82 +69,82 @@ public class QueenTest {
 
         }
 
-        int nd = ndecided(qn);
+        int nd = ndecided(gc);
         assertFalse("too few decided; ndecided=" + nd + " wanted=" + wanted, nd < wanted);
 
     }
 
     /*
-    private void waitmajority(Queen[] qn){
-        waitn(qn, (qn.length/2) + 1);
+    private void waitmajority(GradeCast[] gc){
+        waitn(gc, (gc.length/2) + 1);
     }
     */
 
-    private void cleanup(Queen[] qn){
-        for(int i = 0; i < qn.length; i++){
-            if(qn[i] != null){
-                qn[i].Kill();
+    private void cleanup(GradeCast[] gc){
+        for(int i = 0; i < gc.length; i++){
+            if(gc[i] != null){
+                gc[i].Kill();
             }
         }
     }
 
-    private Queen[] initQueen(int nqueen, Float[] weights){
+    private GradeCast[] initGradeCast(int nqueen, Float[] weights){
         String host = "127.0.0.1";
         String[] peers = new String[nqueen];
         int[] ports = new int[nqueen];
-        Queen[] qn = new Queen[nqueen];
+        GradeCast[] gc = new GradeCast[nqueen];
         for(int i = 0 ; i < nqueen; i++){
             ports[i] = 1100+i;
             peers[i] = host;
         }
         for(int i = 0; i < nqueen; i++){
-            qn[i] = new Queen(i, peers, ports, weights);
+            gc[i] = new GradeCast(i, peers, ports, weights);
         }
-        return qn;
+        return gc;
     }
 
     @Test 
-    public void TestSingleQueen()
+    public void TestSingleGradeCast()
     {
         int nqueen = 1; 
         Float[] weights = {1.0f}; 
-        Queen[] qn = initQueen(nqueen, weights);
+        GradeCast[] gc = initGradeCast(nqueen, weights);
 
-        System.out.println("Test: Single Queen ...");
+        System.out.println("Test: Single GradeCast ...");
 
-        qn[0].Start(1);
+        gc[0].Start(1);
         
-        waitn(qn, 1); 
-        assertFalse("Validity not satisfied, qn has value" + qn[0].V, qn[0].V != 1);
-        cleanup(qn); 
+        waitn(gc, 1); 
+        assertFalse("Validity not satisfied, gc has value" + gc[0].V, gc[0].V != 1);
+        cleanup(gc); 
 
-        qn = initQueen(nqueen, weights);
+        gc = initGradeCast(nqueen, weights);
 
-        qn[0].Start(0);
+        gc[0].Start(0);
 
-        waitn(qn, 1); 
-        assertFalse("Validity not satisfied, qn has value" + qn[0].V, qn[0].V != 0);
+        waitn(gc, 1); 
+        assertFalse("Validity not satisfied, gc has value" + gc[0].V, gc[0].V != 0);
 
-        cleanup(qn);
+        cleanup(gc);
 
         System.out.println("Variable weights"); 
 
         nqueen = 5; 
         Float[] new_weights = {0.1f,0.6f,0.3f,0.0f,0.0f}; 
 
-        qn = initQueen(nqueen, new_weights);
+        gc = initGradeCast(nqueen, new_weights);
 
-        qn[0].Start(0);
-        qn[1].Start(1);
-        qn[2].Start(0);
-        qn[3].Start(0);
-        qn[4].Start(0);
+        gc[0].Start(0);
+        gc[1].Start(1);
+        gc[2].Start(0);
+        gc[3].Start(0);
+        gc[4].Start(0);
 
         // only wait for one iteraion
-        waitn_iter(qn, 5, 1); 
-        assertFalse("Expecting 1" + qn[0].V, qn[0].V != 1);
+        waitn_iter(gc, 5, 1); 
+        assertFalse("Expecting 1" + gc[0].V, gc[0].V != 1);
 
-        cleanup(qn);
+        cleanup(gc);
 
         System.out.println("... Passed");
 
@@ -158,60 +158,60 @@ public class QueenTest {
         final int nqueen = 5;
         final Float[] weights = {0.2f,0.2f,0.2f,0.2f,0.2f}; 
 
-        Queen[] qn = initQueen(nqueen, weights);
+        GradeCast[] gc = initGradeCast(nqueen, weights);
 
         System.out.println("Basic Test with 5 actors");
-        // should be 0 (inconclusive weight followed by qn[0] queen)
-        qn[0].Start(0);
-        qn[1].Start(1);
-        qn[2].Start(0);
-        qn[3].Start(1);
-        qn[4].Start(0);
-        waitn(qn, nqueen);
+        // should be 0 (inconclusive weight followed by gc[0] queen)
+        gc[0].Start(0);
+        gc[1].Start(1);
+        gc[2].Start(0);
+        gc[3].Start(1);
+        gc[4].Start(0);
+        waitn(gc, nqueen);
 
-        assertFalse("Expecting 0", qn[0].V != 0);
-        cleanup(qn); 
+        assertFalse("Expecting 0", gc[0].V != 0);
+        cleanup(gc); 
 
-        qn = initQueen(nqueen, weights);
+        gc = initGradeCast(nqueen, weights);
         // should be 0 (consortium in iter 1 phase 1)
-        qn[0].Start(1);
-        qn[1].Start(0);
-        qn[2].Start(0);
-        qn[3].Start(0);
-        qn[4].Start(0);
+        gc[0].Start(1);
+        gc[1].Start(0);
+        gc[2].Start(0);
+        gc[3].Start(0);
+        gc[4].Start(0);
 
-        waitn(qn, nqueen);
-        assertFalse("Expecting 0", qn[0].V != 0);
+        waitn(gc, nqueen);
+        assertFalse("Expecting 0", gc[0].V != 0);
 
-        cleanup(qn); 
+        cleanup(gc); 
 
-        qn = initQueen(nqueen, weights);
+        gc = initGradeCast(nqueen, weights);
         // should be 1 (consortium in iter 1 phase 1)
-        qn[0].Start(0);
-        qn[1].Start(1);
-        qn[2].Start(1);
-        qn[3].Start(1);
-        qn[4].Start(1);
+        gc[0].Start(0);
+        gc[1].Start(1);
+        gc[2].Start(1);
+        gc[3].Start(1);
+        gc[4].Start(1);
 
-        waitn(qn, nqueen);
-        assertFalse("Expecting 1", qn[0].V != 1);
+        waitn(gc, nqueen);
+        assertFalse("Expecting 1", gc[0].V != 1);
 
-        cleanup(qn); 
+        cleanup(gc); 
 
-        qn = initQueen(nqueen, weights);
+        gc = initGradeCast(nqueen, weights);
         // should be 1 (inconclusive followed by queen value of 1)
-        qn[0].Start(1);
-        qn[1].Start(1);
-        qn[2].Start(0);
-        qn[3].Start(0);
-        qn[4].Start(1);
+        gc[0].Start(1);
+        gc[1].Start(1);
+        gc[2].Start(0);
+        gc[3].Start(0);
+        gc[4].Start(1);
 
-        waitn(qn, nqueen);
-        assertFalse("Expecting 1", qn[0].V != 1);
+        waitn(gc, nqueen);
+        assertFalse("Expecting 1", gc[0].V != 1);
 
         System.out.println("... Passed");
 
-        cleanup(qn);
+        cleanup(gc);
 
     }
 
@@ -221,44 +221,44 @@ public class QueenTest {
         final int nqueen = 5;
         final Float[] weights = {0.2f,0.2f,0.2f,0.2f,0.2f}; 
 
-        Queen[] qn = initQueen(nqueen, weights);
+        GradeCast[] gc = initGradeCast(nqueen, weights);
 
         System.out.println("Why Don't we kill Node 3");
-        // should be 0 (inconclusive weight followed by qn[0] queen)
-        qn[0].Start(0);
-        qn[1].Start(1);
-        qn[2].Start(0);
-        qn[3].Start(1);
-        qn[4].Start(0);
+        // should be 0 (inconclusive weight followed by gc[0] queen)
+        gc[0].Start(0);
+        gc[1].Start(1);
+        gc[2].Start(0);
+        gc[3].Start(1);
+        gc[4].Start(0);
         
         General.wait_millis(4000);
         // Kill a process
-        qn[3].Kill();
+        gc[3].Kill();
 
-        waitn(qn, nqueen -1);
+        waitn(gc, nqueen -1);
 
-        //assertFalse("Expecting 0", qn[0].V != 0);
-        cleanup(qn); 
+        //assertFalse("Expecting 0", gc[0].V != 0);
+        cleanup(gc); 
 
-        qn = initQueen(nqueen, weights);
+        gc = initGradeCast(nqueen, weights);
 
         System.out.println("Off with her Head! Kill the queen");
-        // should be 0 (inconclusive weight followed by qn[0] queen)
-        qn[0].Start(0);
-        qn[1].Start(1);
-        qn[2].Start(0);
-        qn[3].Start(1);
-        qn[4].Start(0);
+        // should be 0 (inconclusive weight followed by gc[0] queen)
+        gc[0].Start(0);
+        gc[1].Start(1);
+        gc[2].Start(0);
+        gc[3].Start(1);
+        gc[4].Start(0);
         
         General.wait_millis(4000);
         // Kill the queen
-        qn[0].Kill();
+        gc[0].Kill();
         
 
-        waitn(qn, nqueen -1);
+        waitn(gc, nqueen -1);
 
-        //assertFalse("Expecting 0", qn[0].V != 0);
-        cleanup(qn); 
+        //assertFalse("Expecting 0", gc[0].V != 0);
+        cleanup(gc); 
 
         System.out.println("... Passed");
     }
@@ -277,24 +277,24 @@ public class QueenTest {
         System.out.println("Byzantine Test");
 
         for(int i = 0; i < 15; i++){
-            Queen[] qn = initQueen(nqueen, weights);
+            GradeCast[] gc = initGradeCast(nqueen, weights);
 
-            qn[0].Start(0);
-            qn[1].Start(1);
-            qn[2].Start(0);
-            qn[3].Start(1);
-            qn[4].Start(0);
+            gc[0].Start(0);
+            gc[1].Start(1);
+            gc[2].Start(0);
+            gc[3].Start(1);
+            gc[4].Start(0);
 
             // wait for somewhere between 1 and 15 seconds
             General.wait_millis((rand.nextInt(15)+1)*1000);
             assignedType = Byzantine.get_random_byzantine_type(rand.nextInt(5));
             node = rand.nextInt(nqueen);
-            qn[node].set_byzantine(assignedType);
+            gc[node].set_byzantine(assignedType);
             System.out.println("Set Node "+node+" to byzatine type "+assignedType);
 
-            waitn(qn, nqueen -1);
+            waitn(gc, nqueen -1);
 
-            cleanup(qn); 
+            cleanup(gc); 
         }
 
 
@@ -304,38 +304,38 @@ public class QueenTest {
     public void TestDeaf(){
 
         final int nqueen = 5;
-        Queen[] qn = initQueen(nqueen);
+        GradeCast[] gc = initGradeCast(nqueen);
 
         System.out.println("Test: Deaf proposer ...");
-        qn[0].Start(0, "hello");
-        waitn(qn, 0, nqueen);
+        gc[0].Start(0, "hello");
+        waitn(gc, 0, nqueen);
 
-        qn[1].ports[0]= 1;
-        qn[1].ports[nqueen-1]= 1;
-        qn[1].Start(1, "goodbye");
-        waitmajority(qn, 1);
+        gc[1].ports[0]= 1;
+        gc[1].ports[nqueen-1]= 1;
+        gc[1].Start(1, "goodbye");
+        waitmajority(gc, 1);
         try {
             Thread.sleep(1000);
         } catch (Exception e){
             e.printStackTrace();
         }
-        int nd = ndecided(qn, 1);
+        int nd = ndecided(gc, 1);
         assertFalse("a deaf peer heard about a decision " + nd, nd != nqueen-2);
 
-        qn[0].Start(1, "xxx");
-        waitn(qn, 1, nqueen-1);
+        gc[0].Start(1, "xxx");
+        waitn(gc, 1, nqueen-1);
         try {
             Thread.sleep(1000);
         } catch (Exception e){
             e.printStackTrace();
         }
-        nd = ndecided(qn, 1);
+        nd = ndecided(gc, 1);
         assertFalse("a deaf peer heard about a decision " + nd, nd != nqueen-1);
 
-        qn[nqueen-1].Start(1, "yyy");
-        waitn(qn, 1, nqueen);
+        gc[nqueen-1].Start(1, "yyy");
+        waitn(gc, 1, nqueen);
         System.out.println("... Passed");
-        cleanup(qn);
+        cleanup(gc);
 
     }
 
@@ -343,50 +343,50 @@ public class QueenTest {
     public void TestForget(){
 
         final int nqueen = 6;
-        Queen[] qn = initQueen(nqueen);
+        GradeCast[] gc = initGradeCast(nqueen);
 
         System.out.println("Test: Forgetting ...");
 
         for(int i = 0; i < nqueen; i++){
-            int m = qn[i].Min();
+            int m = gc[i].Min();
             assertFalse("Wrong initial Min() " + m, m > 0);
         }
 
-        qn[0].Start(0,"00");
-        qn[1].Start(1,"11");
-        qn[2].Start(2,"22");
-        qn[0].Start(6,"66");
-        qn[1].Start(7,"77");
+        gc[0].Start(0,"00");
+        gc[1].Start(1,"11");
+        gc[2].Start(2,"22");
+        gc[0].Start(6,"66");
+        gc[1].Start(7,"77");
 
-        waitn(qn, 0, nqueen);
+        waitn(gc, 0, nqueen);
         for(int i = 0; i < nqueen; i++){
-            int m = qn[i].Min();
+            int m = gc[i].Min();
             assertFalse("Wrong Min() " + m + "; expected 0", m != 0);
         }
 
-        waitn(qn, 1, nqueen);
+        waitn(gc, 1, nqueen);
         for(int i = 0; i < nqueen; i++){
-            int m = qn[i].Min();
+            int m = gc[i].Min();
             assertFalse("Wrong Min() " + m + "; expected 0", m != 0);
         }
 
         for(int i = 0; i < nqueen; i++){
-            qn[i].Done(0);
+            gc[i].Done(0);
         }
 
         for(int i = 1; i < nqueen; i++){
-            qn[i].Done(1);
+            gc[i].Done(1);
         }
 
         for(int i = 0; i < nqueen; i++){
-            qn[i].Start(8+i, "xx");
+            gc[i].Start(8+i, "xx");
         }
 
         boolean ok = false;
         for(int iters = 0; iters < 12; iters++){
             ok = true;
             for(int i = 0; i < nqueen; i++){
-                int s = qn[i].Min();
+                int s = gc[i].Min();
                 if(s != 1){
                     ok = false;
                 }
@@ -401,7 +401,7 @@ public class QueenTest {
         }
         assertFalse("Min() did not advance after Done()", ok != true);
         System.out.println("... Passed");
-        cleanup(qn);
+        cleanup(gc);
 
 
     }
