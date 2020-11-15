@@ -12,10 +12,11 @@ import java.lang.System;
 // for array manipulation
 import java.util.Arrays;
 
-
+import general.Byzantine;
 import general.General;
 import general.Message;
 import general.MessageRMI;
+import general.Byzantine.ByzanType;
 
 
 public class Queen implements MessageRMI, Runnable {
@@ -54,6 +55,7 @@ public class Queen implements MessageRMI, Runnable {
     int V;
     Integer myValue, queenValue; // can be null
 
+    Byzantine byz; 
 
     private class LocalState extends TimerTask{
         int iteration; // 0 = first anchor, 1 = second anchor, ...
@@ -124,7 +126,6 @@ public class Queen implements MessageRMI, Runnable {
                 //wait
             //}
             
-            
             // specific to the queen algorithm
             
             this.phase = this.phase + 1;
@@ -182,6 +183,8 @@ public class Queen implements MessageRMI, Runnable {
         this.myValue = null;
         this.queenValue = null;
         this.myWeight = 0; 
+
+        this.byz = new Byzantine(ByzanType.CORRECT); 
 
         this.receivedValue = new Boolean[peers.length];
         Arrays.fill(receivedValue,false); 
@@ -338,6 +341,7 @@ public class Queen implements MessageRMI, Runnable {
                     }
                     break;
                 case 2:
+                    // make sure that the message sender is the pre-determined queen
                     if(msg.get_peer_id()==this.Anchor[localState.get_current_iteration()]){
                         queenValue = msg.get_value(); 
                     }
@@ -373,11 +377,24 @@ public class Queen implements MessageRMI, Runnable {
 
     private void exchange_value(int val){
         // craft message
-        Message msg = new Message(this.me, val); 
+        Message msg; 
+        Integer newVal; 
 
+        boolean amiqueen = (this.me == Anchor[this.localState.get_current_iteration()] &&
+                            this.localState.get_current_phase() == 2); 
         // send to everybody
         for(int i = 0; i < ports.length; i++){
-            Call("Send",msg,i); 
+            // this will only change value if there is a byzantine setting
+            newVal = byz.Byzantine_Filter(val, i, amiqueen);
+            if(newVal == null || val != newVal) {
+                System.out.println("Node "+this.me+" sends altered message val "+
+                                   newVal+" from original "+val+"."); 
+            }
+            if(newVal != null){
+                msg = new Message(this.me, newVal); 
+                Call("Send",msg,i); 
+            }
+           
         }
 
     }
@@ -398,7 +415,7 @@ public class Queen implements MessageRMI, Runnable {
      * 
      */
     public void Kill(){
-        System.out.println("Node "+this.me+" has been killed");
+        //System.out.println("Node "+this.me+" has been killed");
         this.dead.getAndSet(true);
         // cancel periodic task too
         this.phaseTimer.cancel();
@@ -409,6 +426,10 @@ public class Queen implements MessageRMI, Runnable {
                 System.out.println("None reference");
             }
         }
+    }
+
+    public void set_byzantine(ByzanType bt){
+        this.byz.set_byzantype(bt);
     }
 
     public boolean isDead(){

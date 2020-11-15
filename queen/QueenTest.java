@@ -3,6 +3,8 @@ package queen;
 import org.junit.Test;
 
 import general.General;
+import general.Byzantine;
+import java.util.Random;
 
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertFalse;
@@ -165,39 +167,6 @@ public class QueenTest {
 
         System.out.println("... Passed");
 
-        /*
-        System.out.println("Test: Many proposers, same value ...");
-        for(int i = 0; i < nqueen; i++){
-            qn[i].Start(1, 77);
-        }
-        waitn(qn, 1, nqueen);
-        System.out.println("... Passed");
-
-        System.out.println("Test: Many proposers, different values ...");
-        qn[0].Start(2, 100);
-        qn[1].Start(2, 101);
-        qn[2].Start(2, 102);
-        waitn(qn, 2, nqueen);
-        System.out.println("... Passed");
-
-        System.out.println("Test: Out-of-order instances ...");
-        qn[0].Start(7, 700);
-        try {
-            Thread.sleep(10);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        qn[0].Start(6, 600);
-        qn[1].Start(5, 500);
-        waitn(qn, 7, nqueen);
-        qn[0].Start(4, 400);
-        qn[1].Start(3, 300);
-        waitn(qn, 6, nqueen);
-        waitn(qn, 5, nqueen);
-        waitn(qn, 4, nqueen);
-        waitn(qn, 3, nqueen);
-        System.out.println("... Passed");
-        */
         cleanup(qn);
 
     }
@@ -246,6 +215,43 @@ public class QueenTest {
 
         //assertFalse("Expecting 0", qn[0].V != 0);
         cleanup(qn); 
+    }
+
+    @Test
+    public void TestByzantineBasic()
+    {
+        final int nqueen = 5;
+        final Float[] weights = {0.2f,0.2f,0.2f,0.2f,0.2f}; 
+
+        Byzantine.ByzanType assignedType;
+        int node;
+
+        Random rand = new Random(2222); 
+
+        System.out.println("Byzantine Test");
+
+        for(int i = 0; i < 5; i++){
+            Queen[] qn = initQueen(nqueen, weights);
+
+            qn[0].Start(0);
+            qn[1].Start(1);
+            qn[2].Start(0);
+            qn[3].Start(1);
+            qn[4].Start(0);
+
+            // wait for somewhere between 1 and 15 seconds
+            General.wait_millis((rand.nextInt(15)+1)*1000);
+            assignedType = Byzantine.get_random_byzantine_type(rand.nextInt(5));
+            node = rand.nextInt(nqueen);
+            qn[node].set_byzantine(assignedType);
+            System.out.println("Set Node "+node+" to byzatine type "+assignedType);
+
+            waitn(qn, nqueen -1);
+
+            cleanup(qn); 
+        }
+
+
     }
     /*
     @Test
