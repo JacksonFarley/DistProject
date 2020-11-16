@@ -3,7 +3,6 @@ package king;
 import general.Byzantine;
 import general.General;
 import org.junit.Test;
-import queen.Queen;
 
 import java.util.Random;
 
@@ -166,40 +165,6 @@ public class KingTest {
         assertFalse("Expecting 1", kn[0].V != 1);
 
         System.out.println("... Passed");
-
-/*
-        System.out.println("Test: Many proposers, same value ...");
-        for(int i = 0; i < nking; i++){
-            kn[i].Start(1, 77);
-        }
-        waitn(kn, 1, nking);
-        System.out.println("... Passed");
-
-        System.out.println("Test: Many proposers, different values ...");
-        kn[0].Start(2, 100);
-        kn[1].Start(2, 101);
-        kn[2].Start(2, 102);
-        waitn(kn, 2, nking);
-        System.out.println("... Passed");
-
-        System.out.println("Test: Out-of-order instances ...");
-        kn[0].Start(7, 700);
-        try {
-            Thread.sleep(10);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        kn[0].Start(6, 600);
-        kn[1].Start(5, 500);
-        waitn(kn, 7, nking);
-        kn[0].Start(4, 400);
-        kn[1].Start(3, 300);
-        waitn(kn, 6, nking);
-        waitn(kn, 5, nking);
-        waitn(kn, 4, nking);
-        waitn(kn, 3, nking);
-        System.out.println("... Passed");
-        */
         cleanup(kn);
 
     }
@@ -212,7 +177,7 @@ public class KingTest {
 
         King[] kn = initKing(nking, weights);
 
-        System.out.println("Why Don't we kill Node 3");
+        System.out.println("Basic Kill process 0 and 1");
         // should be 0 (inconclusive weight followed by qn[0] queen)
         kn[0].Start(0);
         kn[1].Start(1);
@@ -234,121 +199,12 @@ public class KingTest {
 
         System.out.println("... Passed");
     }
-    /*
-    @Test
-    public void TestDeaf(){
-
-        final int nking = 5;
-        King[] kn = initKing(nking);
-
-        System.out.println("Test: Deaf proposer ...");
-        kn[0].Start(0, "hello");
-        waitn(kn, 0, nking);
-
-        kn[1].ports[0]= 1;
-        kn[1].ports[nking-1]= 1;
-        kn[1].Start(1, "goodbye");
-        waitmajority(kn, 1);
-        try {
-            Thread.sleep(1000);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        int nd = ndecided(kn, 1);
-        assertFalse("a deaf peer heard about a decision " + nd, nd != nking-2);
-
-        kn[0].Start(1, "xxx");
-        waitn(kn, 1, nking-1);
-        try {
-            Thread.sleep(1000);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        nd = ndecided(kn, 1);
-        assertFalse("a deaf peer heard about a decision " + nd, nd != nking-1);
-
-        kn[nking-1].Start(1, "yyy");
-        waitn(kn, 1, nking);
-        System.out.println("... Passed");
-        cleanup(kn);
-
-    }
-
-    @Test
-    public void TestForget(){
-
-        final int nking = 6;
-        King[] kn = initKing(nking);
-
-        System.out.println("Test: Forgetting ...");
-
-        for(int i = 0; i < nking; i++){
-            int m = kn[i].Min();
-            assertFalse("Wrong initial Min() " + m, m > 0);
-        }
-
-        kn[0].Start(0,"00");
-        kn[1].Start(1,"11");
-        kn[2].Start(2,"22");
-        kn[0].Start(6,"66");
-        kn[1].Start(7,"77");
-
-        waitn(kn, 0, nking);
-        for(int i = 0; i < nking; i++){
-            int m = kn[i].Min();
-            assertFalse("Wrong Min() " + m + "; expected 0", m != 0);
-        }
-
-        waitn(kn, 1, nking);
-        for(int i = 0; i < nking; i++){
-            int m = kn[i].Min();
-            assertFalse("Wrong Min() " + m + "; expected 0", m != 0);
-        }
-
-        for(int i = 0; i < nking; i++){
-            kn[i].Done(0);
-        }
-
-        for(int i = 1; i < nking; i++){
-            kn[i].Done(1);
-        }
-
-        for(int i = 0; i < nking; i++){
-            kn[i].Start(8+i, "xx");
-        }
-
-        boolean ok = false;
-        for(int iters = 0; iters < 12; iters++){
-            ok = true;
-            for(int i = 0; i < nking; i++){
-                int s = kn[i].Min();
-                if(s != 1){
-                    ok = false;
-                }
-            }
-            if(ok) break;
-            try {
-                Thread.sleep(1000);
-            } catch (Exception e){
-                e.printStackTrace();
-            }
-
-        }
-        assertFalse("Min() did not advance after Done()", ok != true);
-        System.out.println("... Passed");
-        cleanup(kn);
-
-
-    }
-
-    */
 
     @Test
     public void TestByzantineBasic()
     {
         final int nqueen = 5;
         final Float[] weights = {0.2f,0.2f,0.2f,0.2f,0.2f};
-
         Byzantine.ByzanType assignedType;
         int node;
 
@@ -373,10 +229,78 @@ public class KingTest {
             System.out.println("Set Node "+node+" to byzatine type "+assignedType);
 
             waitn(qn, nqueen -1);
-
+            System.out.println("Passed...");
             cleanup(qn);
         }
-
-
     }
+
+    @Test
+    public void TestByzantineDifferentWeights() {
+        final int nqueen = 5;
+        final Float[] weights = {0.3f,0.3f,0.2f,0.1f,0.1f};
+        Byzantine.ByzanType assignedType;
+        int node;
+
+        Random rand = new Random(2222);
+
+        System.out.println("Byzantine Test");
+
+        for(int i = 0; i < 15; i++){
+            King[] qn = initKing(nqueen, weights);
+
+            qn[0].Start(0);
+            qn[1].Start(1);
+            qn[2].Start(0);
+            qn[3].Start(1);
+            qn[4].Start(0);
+
+            // wait for somewhere between 1 and 15 seconds
+            General.wait_millis((rand.nextInt(15)+1)*1000);
+            assignedType = Byzantine.get_random_byzantine_type(rand.nextInt(5));
+            node = rand.nextInt(nqueen);
+            qn[node].set_byzantine(assignedType);
+            System.out.println("Set Node "+node+" to byzatine type "+assignedType);
+
+            waitn(qn, nqueen -1);
+            System.out.println("Passed...");
+            cleanup(qn);
+        }
+    }
+
+    @Test
+    public void TestByzantineZeroWeights() {
+        final int nqueen = 5;
+        final Float[] weights = {0.4f,0.3f,0.2f,0.1f,0.0f};
+        Byzantine.ByzanType assignedType;
+        int node;
+
+        Random rand = new Random(2222);
+
+        System.out.println("Byzantine Test");
+
+        for(int i = 0; i < 15; i++){
+            King[] qn = initKing(nqueen, weights);
+
+            qn[0].Start(0);
+            qn[1].Start(1);
+            qn[2].Start(0);
+            qn[3].Start(1);
+            qn[4].Start(0);
+
+            // wait for somewhere between 1 and 15 seconds
+            General.wait_millis((rand.nextInt(15)+1)*1000);
+            assignedType = Byzantine.get_random_byzantine_type(rand.nextInt(5));
+            node = rand.nextInt(nqueen);
+            qn[node].set_byzantine(assignedType);
+            System.out.println("Set Node "+node+" to byzatine type "+assignedType);
+
+            waitn(qn, nqueen -1);
+            System.out.println("Passed...");
+            cleanup(qn);
+        }
+    }
+
+
+
+
 }
