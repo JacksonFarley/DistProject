@@ -388,11 +388,11 @@ public class Queen implements MessageRMI, Runnable {
         for(int i = 0; i < ports.length; i++){
             // this will only change value if there is a byzantine setting
             newVal = byz.Byzantine_Filter(val, i, amiqueen);
-            if(newVal == null || val != newVal) {
+            if(val != newVal) {
                 System.out.println("Node "+this.me+" sends altered message val "+
                                    newVal+" from original "+val+"."); 
             }
-            if(newVal != null){
+            if(newVal != -1){
                 msg = new Message(this.me, newVal); 
                 Call("Send",msg,i); 
             }
