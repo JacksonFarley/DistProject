@@ -132,6 +132,7 @@ public class GradeCast implements MessageRMI, Runnable {
                         V = 0; // default value
                         Confidence = 0;
                     }
+                    break;
                 case 4: 
                     // Additional Byzantine work
 
@@ -154,7 +155,7 @@ public class GradeCast implements MessageRMI, Runnable {
                         // we can do this by advancing the iteration number to the end
                         this.iteration = Anchor.length; 
                     }
-                    
+                    break;
                 default: 
                     System.out.println("ERROR: Unsupported phase " +
                                     this.get_current_phase() + " chosen");
@@ -320,7 +321,6 @@ public class GradeCast implements MessageRMI, Runnable {
                         }
                         break; 
                     case 2: 
-                        //System.out.println("Node "+this.me+": performing queen phase on iteration"+localState.get_current_iteration()); 
                         General.wait_millis(2000);
                         exchange_value(leaderValue);
                         break; 
@@ -426,14 +426,13 @@ public class GradeCast implements MessageRMI, Runnable {
                             if(msg.get_confidence() == 2) {
                                 s1 = s1 + this.weights[msg.get_peer_id()];
                             }
+                        } else {
+                            s0_conf1 = s0_conf1 + this.weights[msg.get_peer_id()];
+                            if(msg.get_confidence() == 2){
+                                s0 = s0 + this.weights[msg.get_peer_id()];
+                            }
                         }
-                        
-                    } else {
-                        s0_conf1 = s0_conf1 + this.weights[msg.get_peer_id()];
-                        if(msg.get_confidence() == 2){
-                            s0 = s0 + this.weights[msg.get_peer_id()];
-                        }
-                    }
+                    } 
                        
                     if(msg.get_peer_id() == this.Anchor[localState.get_current_iteration()] &&
                        msg.get_confidence() < 2) {
@@ -483,8 +482,8 @@ public class GradeCast implements MessageRMI, Runnable {
             // this will only change value if there is a byzantine setting
             newVal = byz.Byzantine_Filter(val, i, amiqueen);
             if(newVal == null || val != newVal) {
-                System.out.println("Node "+this.me+" sends altered message val "+
-                                   newVal+" from original "+val+"."); 
+                System.out.println("Node "+this.me+" sends altered message to "+i+
+                                   " with  val "+newVal+" from original "+val+"."); 
             }
             if(newVal != null){
                 msg = new Message(this.me, newVal); 
@@ -509,11 +508,11 @@ public class GradeCast implements MessageRMI, Runnable {
             newVal = byz.Byzantine_Filter(val, i, amiqueen);
             // add byzantine filter for confidence too
             newConfidence = confidence; 
-            if(newVal == null || val != newVal) {
-                System.out.println("Node "+this.me+" sends altered message val "+
-                                newVal+" from original "+val+"."); 
+            if(val != newVal) {
+                System.out.println("Node "+this.me+" sends altered message to "+i+
+                                   " with val "+newVal+" from original "+val+"."); 
             }
-            if(newVal != null){
+            if(newVal != -1){
                 msg = new Message(this.me, newVal, newConfidence); 
                 Call("Send",msg,i); 
             }
@@ -538,14 +537,16 @@ public class GradeCast implements MessageRMI, Runnable {
      */
     public void Kill(){
         //System.out.println("Node "+this.me+" has been killed");
-        this.dead.getAndSet(true);
+        boolean isDead = this.dead.getAndSet(true);
         // cancel periodic task too
         this.phaseTimer.cancel();
         if(this.registry != null){
-            try {
-                UnicastRemoteObject.unexportObject(this.registry, true);
-            } catch(Exception e){
-                System.out.println("None reference");
+            if(isDead == false){
+                try {
+                    UnicastRemoteObject.unexportObject(this.registry, true);
+                } catch(Exception e){
+                    System.out.println("None reference");
+                }
             }
         }
     }

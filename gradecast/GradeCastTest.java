@@ -57,7 +57,7 @@ public class GradeCastTest {
     private void waitn_iter(GradeCast[] gc, int wanted, int num_iterations)
     {
         int to = 1000;
-        for(int i = 0; i < (10*num_iterations+5); i++){
+        for(int i = 0; i < (20*num_iterations+5); i++){
             if(ndecided(gc) >= wanted){
                 break;
             }
@@ -112,22 +112,24 @@ public class GradeCastTest {
 
         System.out.println("Test: Single GradeCast ...");
 
+        System.out.println("\nTest: Single Node Starting with 1");
         gc[0].Start(1);
         
-        waitn(gc, 1); 
+        waitn_iter(gc, 1, 1); 
         assertFalse("Validity not satisfied, gc has value" + gc[0].V, gc[0].V != 1);
         cleanup(gc); 
 
         gc = initGradeCast(nqueen, weights);
 
+        System.out.println("\nTest: Single Node starting with 0");
         gc[0].Start(0);
 
-        waitn(gc, 1); 
+        waitn_iter(gc, 1, 1);  
         assertFalse("Validity not satisfied, gc has value" + gc[0].V, gc[0].V != 0);
 
         cleanup(gc);
 
-        System.out.println("Variable weights"); 
+        System.out.println("\nTest: Variable weights with Node 1 as leader"); 
 
         nqueen = 5; 
         Float[] new_weights = {0.1f,0.6f,0.3f,0.0f,0.0f}; 
@@ -235,14 +237,14 @@ public class GradeCastTest {
         // Kill a process
         gc[3].Kill();
 
-        waitn(gc, nqueen -1);
+        waitn_iter(gc, nqueen -1, 2);
 
         //assertFalse("Expecting 0", gc[0].V != 0);
         cleanup(gc); 
 
         gc = initGradeCast(nqueen, weights);
 
-        System.out.println("Off with her Head! Kill the queen");
+        System.out.println("\nTest: Off with her Head! Kill the leader");
         // should be 0 (inconclusive weight followed by gc[0] queen)
         gc[0].Start(0);
         gc[1].Start(1);
@@ -250,12 +252,12 @@ public class GradeCastTest {
         gc[3].Start(1);
         gc[4].Start(0);
         
-        General.wait_millis(4000);
+        General.wait_millis(1000);
         // Kill the queen
         gc[0].Kill();
         
 
-        waitn(gc, nqueen -1);
+        waitn_iter(gc, nqueen -1, 2);
 
         //assertFalse("Expecting 0", gc[0].V != 0);
         cleanup(gc); 
@@ -292,7 +294,7 @@ public class GradeCastTest {
             gc[node].set_byzantine(assignedType);
             System.out.println("Set Node "+node+" to byzatine type "+assignedType);
 
-            waitn(gc, nqueen -1);
+            waitn_iter(gc, nqueen -1, 2);
 
             cleanup(gc); 
         }

@@ -21,6 +21,8 @@ public class Byzantine {
     int semiSilentRate; 
     int upperbound = 2; // random number of 0 or 1 
 
+    // NOTE: -1 will correspond to silence, not sending.
+
     public Byzantine(ByzanType byz)
     {
         myByzanType = byz;
@@ -28,9 +30,9 @@ public class Byzantine {
         // rand = new Random(System.currentTimeMillis());
         // seeded repetetively
         rand = new Random(2222); 
-        semiSilentRate = rand.nextInt(7)+2; // 20 - 80 % silent. Allows 
+        //semiSilentRate = rand.nextInt(7)+2; // 20 - 80 % silent. Allows 
                                             // for greater randomness in how silent
-        
+        semiSilentRate = 5; 
     }
 
     public void set_byzantype(ByzanType byz)
@@ -63,7 +65,7 @@ public class Byzantine {
                 if(rand.nextInt(10)>=semiSilentRate){
                     outValue = intended; 
                 } else {
-                    outValue = null; 
+                    outValue = -1; 
                 }
                 break;
             case PARTICULARLY_PEEPISH_PAULA: 
@@ -72,7 +74,7 @@ public class Byzantine {
                 {
                     outValue = intended;
                 } else {
-                    outValue = null;
+                    outValue = -1;
                 }
                 break;
             default:
