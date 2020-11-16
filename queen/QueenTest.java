@@ -6,6 +6,8 @@ import general.General;
 import general.Byzantine;
 import java.util.Random;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertFalse;
 
@@ -299,112 +301,112 @@ public class QueenTest {
 
 
     }
-    /*
+
     @Test
-    public void TestDeaf(){
+    public void TestByzantineComplex()
+    {
+        final int nqueen = 10;
+        Float[] weights = new Float[10];
+        Arrays.fill(weights,0.1f); 
 
-        final int nqueen = 5;
-        Queen[] qn = initQueen(nqueen);
+        Float[] weight_set0 = {0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f};
+        Float[] weight_set1 = {0.1f,0.1f,0.1f,0.2f,0.05f,0.05f,0.1f,0.1f,0.1f,0.1f};
+        Float[] weight_set2 = {0.075f,0.075f,0.06f,0.1f,0.075f,0.075f,0.1f,0.2f,0.14f,0.1f};
+        Float[] weight_set3 = {0.07f,0.075f,0.075f,0.1f,0.075f,0.075f,0.1f,0.2f,0.1f,0.13f};
 
-        System.out.println("Test: Deaf proposer ...");
-        qn[0].Start(0, "hello");
-        waitn(qn, 0, nqueen);
+        Float[][] weight_master = {weight_set0, weight_set1,weight_set2,weight_set3};
+        Float weight_byzantine; 
+        Byzantine.ByzanType assignedType;
+        int node;
 
-        qn[1].ports[0]= 1;
-        qn[1].ports[nqueen-1]= 1;
-        qn[1].Start(1, "goodbye");
-        waitmajority(qn, 1);
-        try {
-            Thread.sleep(1000);
-        } catch (Exception e){
-            e.printStackTrace();
+        Random rand = new Random(3333); 
+
+        System.out.println("Byzantine Complex Test");
+
+        for(int i = 0; i < 10; i++){
+            System.out.println("\nRound "+i);
+            Float[] weight_selected = weight_master[rand.nextInt(4)];
+            weight_byzantine = 0.0f;
+            Queen[] qn = initQueen(nqueen, weight_selected);
+
+            qn[0].Start(rand.nextInt(2));
+            qn[1].Start(rand.nextInt(2));
+            qn[2].Start(rand.nextInt(2));
+            qn[3].Start(rand.nextInt(2));
+            qn[4].Start(rand.nextInt(2));
+            qn[5].Start(rand.nextInt(2));
+            qn[6].Start(rand.nextInt(2));
+            qn[7].Start(rand.nextInt(2));
+            qn[8].Start(rand.nextInt(2));
+            qn[9].Start(rand.nextInt(2));
+
+            // wait for somewhere between 1 and 15 seconds
+            General.wait_millis((rand.nextInt(15)+1)*1000);
+            assignedType = Byzantine.get_random_byzantine_type(rand.nextInt(5));
+            node = rand.nextInt(nqueen);
+            weight_byzantine = weight_byzantine + weight_selected[node]; 
+            while(weight_byzantine < 1.0f/4.0f){
+                qn[node].set_byzantine(assignedType);
+                System.out.println("Set Node "+node+" to byzatine type "+assignedType);
+                assignedType = Byzantine.get_random_byzantine_type(rand.nextInt(5));
+                node = rand.nextInt(nqueen);
+                weight_byzantine = weight_byzantine + weight_selected[node];
+            }
+            
+            waitn_iter(qn, nqueen, 4);
+
+            cleanup(qn); 
+            System.out.println("Round Cleared");
         }
-        int nd = ndecided(qn, 1);
-        assertFalse("a deaf peer heard about a decision " + nd, nd != nqueen-2);
 
-        qn[0].Start(1, "xxx");
-        waitn(qn, 1, nqueen-1);
-        try {
-            Thread.sleep(1000);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        nd = ndecided(qn, 1);
-        assertFalse("a deaf peer heard about a decision " + nd, nd != nqueen-1);
-
-        qn[nqueen-1].Start(1, "yyy");
-        waitn(qn, 1, nqueen);
-        System.out.println("... Passed");
-        cleanup(qn);
+        System.out.println("...Passed");
 
     }
 
-    @Test
-    public void TestForget(){
 
-        final int nqueen = 6;
-        Queen[] qn = initQueen(nqueen);
+    @Test 
+    public void TestCoordinatedByzantineAttack()
+    {
+        final int nqueen = 9;
+        Float[] weights = new Float[nqueen];
+        Arrays.fill(weights,1.0f/nqueen); 
 
-        System.out.println("Test: Forgetting ...");
+        Byzantine.ByzanType assignedType;
 
-        for(int i = 0; i < nqueen; i++){
-            int m = qn[i].Min();
-            assertFalse("Wrong initial Min() " + m, m > 0);
-        }
+        System.out.println("Byzantine Coordinated Attack");
 
-        qn[0].Start(0,"00");
-        qn[1].Start(1,"11");
-        qn[2].Start(2,"22");
-        qn[0].Start(6,"66");
-        qn[1].Start(7,"77");
+        for(int i = 0; i < 6; i++){
+            System.out.println("\nRound "+i);
+            Queen[] qn = initQueen(nqueen, weights);
 
-        waitn(qn, 0, nqueen);
-        for(int i = 0; i < nqueen; i++){
-            int m = qn[i].Min();
-            assertFalse("Wrong Min() " + m + "; expected 0", m != 0);
-        }
+            qn[0].Start(0);
+            qn[1].Start(1);
+            qn[2].Start(0);
+            qn[3].Start(1);
+            qn[4].Start(0);
+            qn[5].Start(1);
+            qn[6].Start(0);
+            qn[7].Start(1);
+            qn[8].Start(0);
 
-        waitn(qn, 1, nqueen);
-        for(int i = 0; i < nqueen; i++){
-            int m = qn[i].Min();
-            assertFalse("Wrong Min() " + m + "; expected 0", m != 0);
-        }
-
-        for(int i = 0; i < nqueen; i++){
-            qn[i].Done(0);
-        }
-
-        for(int i = 1; i < nqueen; i++){
-            qn[i].Done(1);
-        }
-
-        for(int i = 0; i < nqueen; i++){
-            qn[i].Start(8+i, "xx");
-        }
-
-        boolean ok = false;
-        for(int iters = 0; iters < 12; iters++){
-            ok = true;
-            for(int i = 0; i < nqueen; i++){
-                int s = qn[i].Min();
-                if(s != 1){
-                    ok = false;
-                }
+            // wait for somewhere between 1 and 15 seconds
+            General.wait_millis(1000);
+            if(i == 5) {
+                qn[0].Kill();
+                qn[1].Kill();
+                System.out.println("Kill 2");
+            }else{
+                assignedType = Byzantine.get_random_byzantine_type(i);
+                qn[0].set_byzantine(assignedType);
+                qn[1].set_byzantine(assignedType);
+                System.out.println("Set to byzatine type "+assignedType);
             }
-            if(ok) break;
-            try {
-                Thread.sleep(1000);
-            } catch (Exception e){
-                e.printStackTrace();
-            }
+            
+            waitn_iter(qn, nqueen -2, 4);
 
+            cleanup(qn); 
         }
-        assertFalse("Min() did not advance after Done()", ok != true);
-        System.out.println("... Passed");
-        cleanup(qn);
-
-
     }
 
-    */
+    
 }

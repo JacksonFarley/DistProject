@@ -50,7 +50,8 @@ public class Byzantine {
                 break;
             case MEAN_QUEEN:
                 if(amiqueen){
-                    outValue = swap(intended);
+                    // more feindish to be random than just to swap
+                    outValue = rand.nextInt(2); 
                 } else {
                     outValue = intended; 
                 }
@@ -76,6 +77,38 @@ public class Byzantine {
                 } else {
                     outValue = -1;
                 }
+                break;
+            default:
+                System.out.println("Byzantine method "+this.myByzanType+" not supported"); 
+                outValue = intended;
+        }
+        return outValue;
+    }
+
+    public Integer Byzantine_Confidence_Filter(int intended, int recipient_id)
+    {
+        Integer outValue; 
+        switch(this.myByzanType)
+        {
+            case CORRECT:
+                outValue = intended;
+                break;
+            case MEAN_QUEEN:
+                outValue = swap_confidence(intended);
+                break;
+            case OPPOSITES_REPEL:
+                outValue = swap_confidence(intended);
+                break;
+            case RANDOM_RANDY:
+                outValue = rand.nextInt(3); // should give 0 to 2
+                break;
+            case SEMI_SILENT_SALLY: 
+                // the standard filter takes care of silence
+                outValue = intended; 
+                break;
+            case PARTICULARLY_PEEPISH_PAULA: 
+                // the standard filter takes care of silence
+                outValue = intended; 
                 break;
             default:
                 System.out.println("Byzantine method "+this.myByzanType+" not supported"); 
@@ -117,6 +150,14 @@ public class Byzantine {
             return 0;
         } else {
             return 1; 
+        }
+    }
+
+    private Integer swap_confidence(int x){
+        if(x <= 1){
+            return 2;
+        } else {
+            return 0; 
         }
     }
 }

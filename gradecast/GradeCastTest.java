@@ -6,6 +6,8 @@ import general.General;
 import general.Byzantine;
 import java.util.Random;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertFalse;
 
@@ -301,112 +303,112 @@ public class GradeCastTest {
 
 
     }
-    /*
-    @Test
-    public void TestDeaf(){
-
-        final int nqueen = 5;
-        GradeCast[] gc = initGradeCast(nqueen);
-
-        System.out.println("Test: Deaf proposer ...");
-        gc[0].Start(0, "hello");
-        waitn(gc, 0, nqueen);
-
-        gc[1].ports[0]= 1;
-        gc[1].ports[nqueen-1]= 1;
-        gc[1].Start(1, "goodbye");
-        waitmajority(gc, 1);
-        try {
-            Thread.sleep(1000);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        int nd = ndecided(gc, 1);
-        assertFalse("a deaf peer heard about a decision " + nd, nd != nqueen-2);
-
-        gc[0].Start(1, "xxx");
-        waitn(gc, 1, nqueen-1);
-        try {
-            Thread.sleep(1000);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        nd = ndecided(gc, 1);
-        assertFalse("a deaf peer heard about a decision " + nd, nd != nqueen-1);
-
-        gc[nqueen-1].Start(1, "yyy");
-        waitn(gc, 1, nqueen);
-        System.out.println("... Passed");
-        cleanup(gc);
-
-    }
 
     @Test
-    public void TestForget(){
+    public void TestByzantineComplex()
+    {
+        final int nqueen = 10;
+        Float[] weights = new Float[10];
+        Arrays.fill(weights,0.1f); 
 
-        final int nqueen = 6;
-        GradeCast[] gc = initGradeCast(nqueen);
+        Float[] weight_set0 = {0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f};
+        Float[] weight_set1 = {0.1f,0.1f,0.1f,0.2f,0.05f,0.05f,0.1f,0.1f,0.1f,0.1f};
+        Float[] weight_set2 = {0.075f,0.075f,0.06f,0.1f,0.075f,0.075f,0.1f,0.2f,0.14f,0.1f};
+        Float[] weight_set3 = {0.07f,0.075f,0.075f,0.1f,0.075f,0.075f,0.1f,0.2f,0.1f,0.13f};
 
-        System.out.println("Test: Forgetting ...");
+        Float[][] weight_master = {weight_set0, weight_set1,weight_set2,weight_set3};
+        Float weight_byzantine; 
+        Byzantine.ByzanType assignedType;
+        int node;
 
-        for(int i = 0; i < nqueen; i++){
-            int m = gc[i].Min();
-            assertFalse("Wrong initial Min() " + m, m > 0);
-        }
+        Random rand = new Random(3333); 
 
-        gc[0].Start(0,"00");
-        gc[1].Start(1,"11");
-        gc[2].Start(2,"22");
-        gc[0].Start(6,"66");
-        gc[1].Start(7,"77");
+        System.out.println("Byzantine Complex Test");
 
-        waitn(gc, 0, nqueen);
-        for(int i = 0; i < nqueen; i++){
-            int m = gc[i].Min();
-            assertFalse("Wrong Min() " + m + "; expected 0", m != 0);
-        }
+        for(int i = 0; i < 1; i++){
+            Float[] weight_selected = weight_master[rand.nextInt(4)];
+            weight_byzantine = 0.0f;
+            GradeCast[] gc = initGradeCast(nqueen, weight_selected);
 
-        waitn(gc, 1, nqueen);
-        for(int i = 0; i < nqueen; i++){
-            int m = gc[i].Min();
-            assertFalse("Wrong Min() " + m + "; expected 0", m != 0);
-        }
+            gc[0].Start(rand.nextInt(2));
+            gc[1].Start(rand.nextInt(2));
+            gc[2].Start(rand.nextInt(2));
+            gc[3].Start(rand.nextInt(2));
+            gc[4].Start(rand.nextInt(2));
+            gc[5].Start(rand.nextInt(2));
+            gc[6].Start(rand.nextInt(2));
+            gc[7].Start(rand.nextInt(2));
+            gc[8].Start(rand.nextInt(2));
+            gc[9].Start(rand.nextInt(2));
 
-        for(int i = 0; i < nqueen; i++){
-            gc[i].Done(0);
-        }
-
-        for(int i = 1; i < nqueen; i++){
-            gc[i].Done(1);
-        }
-
-        for(int i = 0; i < nqueen; i++){
-            gc[i].Start(8+i, "xx");
-        }
-
-        boolean ok = false;
-        for(int iters = 0; iters < 12; iters++){
-            ok = true;
-            for(int i = 0; i < nqueen; i++){
-                int s = gc[i].Min();
-                if(s != 1){
-                    ok = false;
-                }
+            // wait for somewhere between 1 and 15 seconds
+            General.wait_millis((rand.nextInt(15)+1)*1000);
+            assignedType = Byzantine.get_random_byzantine_type(rand.nextInt(5));
+            node = rand.nextInt(nqueen);
+            weight_byzantine = weight_byzantine + weight_selected[node]; 
+            while(weight_byzantine < 1.0f/3.0f){
+                gc[node].set_byzantine(assignedType);
+                System.out.println("Set Node "+node+" to byzatine type "+assignedType);
+                assignedType = Byzantine.get_random_byzantine_type(rand.nextInt(5));
+                node = rand.nextInt(nqueen);
+                weight_byzantine = weight_byzantine + weight_selected[node];
             }
-            if(ok) break;
-            try {
-                Thread.sleep(1000);
-            } catch (Exception e){
-                e.printStackTrace();
-            }
+            
+            waitn_iter(gc, nqueen, 4);
 
+            cleanup(gc); 
         }
-        assertFalse("Min() did not advance after Done()", ok != true);
-        System.out.println("... Passed");
-        cleanup(gc);
 
 
     }
 
-    */
+    @Test 
+    public void TestCoordinatedByzantineAttack()
+    {
+        final int nqueen = 10;
+        Float[] weights = new Float[nqueen];
+        Arrays.fill(weights,0.1f); 
+
+        Byzantine.ByzanType assignedType;
+
+        System.out.println("Byzantine Coordinated Attack");
+
+        for(int i = 0; i < 6; i++){
+            System.out.println("\nRound "+i);
+            GradeCast[] gc = initGradeCast(nqueen, weights);
+
+            gc[0].Start(0);
+            gc[1].Start(1);
+            gc[2].Start(0);
+            gc[3].Start(1);
+            gc[4].Start(0);
+            gc[5].Start(1);
+            gc[6].Start(0);
+            gc[7].Start(1);
+            gc[8].Start(0);
+            gc[9].Start(1);
+
+            // wait for somewhere between 1 and 15 seconds
+            General.wait_millis(1000);
+            if(i == 5) {
+                gc[0].Kill();
+                gc[1].Kill();
+                gc[2].Kill();
+                System.out.println("Kill 3");
+            }else{
+                assignedType = Byzantine.get_random_byzantine_type(i);
+                gc[0].set_byzantine(assignedType);
+                gc[1].set_byzantine(assignedType);
+                gc[2].set_byzantine(assignedType);
+                System.out.println("Set to byzatine type "+assignedType);
+            }
+            
+            waitn_iter(gc, nqueen -3, 4);
+
+            cleanup(gc); 
+        }
+    }
+
+
+   
 }
