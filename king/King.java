@@ -1,5 +1,6 @@
 package king;
 
+import general.Byzantine;
 import general.General;
 import general.Message;
 import general.MessageRMI;
@@ -13,7 +14,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 // for phase timing
-
 
 public class King implements MessageRMI, Runnable {
 
@@ -49,6 +49,8 @@ public class King implements MessageRMI, Runnable {
     float s0, s1, su, myWeight;
     int V;
     Integer myValue, kingValue; // can be null
+
+    Byzantine byz;
 
 
     private class LocalState extends TimerTask{
@@ -102,8 +104,8 @@ public class King implements MessageRMI, Runnable {
                         myValue = 1;
                         myWeight = s1;
                     } else {
-                        //My value is null which is undecided
-                        myValue = null;
+                        //My value is undecided make it two
+                        myValue = 2;
                         myWeight = su;
                     }
                     break;
@@ -212,7 +214,8 @@ public class King implements MessageRMI, Runnable {
         this.finished = false; 
 
         // should be supplied by test
-        this.V = -1; 
+        this.V = -1;
+        this.byz = new Byzantine(Byzantine.ByzanType.CORRECT);
 
         // register peers, do not modify this part
         try{
@@ -400,14 +403,32 @@ public class King implements MessageRMI, Runnable {
 
     private void exchange_value(int val){
         // craft message
-        Message msg = new Message(this.me, val); 
+        Message msg;
+        Integer newVal;
 
+        boolean amiking = (this.me == Anchor[this.localState.get_current_iteration()] &&
+                this.localState.get_current_phase() == 3);
         // send to everybody
         for(int i = 0; i < ports.length; i++){
-            Call("Send",msg,i); 
+            // this will only change value if there is a byzantine setting
+            newVal = byz.Byzantine_Filter(val, i, amiking);
+            if(newVal == null || val != newVal) {
+                System.out.println("Node "+this.me+" sends altered message val "+
+                        newVal+" from original "+val+".");
+            }
+            if(newVal != null){
+                msg = new Message(this.me, newVal);
+                Call("Send",msg,i);
+            }
+
         }
 
     }
+
+    public void set_byzantine(Byzantine.ByzanType bt){
+        this.byz.set_byzantype(bt);
+    }
+
 
     /*
     private void ready_to_advance()
@@ -426,6 +447,8 @@ public class King implements MessageRMI, Runnable {
      */
     public void Kill(){
         this.dead.getAndSet(true);
+        // cancel periodic task too
+        this.phaseTimer.cancel();
         if(this.registry != null){
             try {
                 UnicastRemoteObject.unexportObject(this.registry, true);

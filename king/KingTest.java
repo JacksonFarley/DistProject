@@ -1,6 +1,11 @@
 package king;
 
+import general.Byzantine;
+import general.General;
 import org.junit.Test;
+import queen.Queen;
+
+import java.util.Random;
 
 import static org.junit.Assert.assertFalse;
 
@@ -198,6 +203,37 @@ public class KingTest {
         cleanup(kn);
 
     }
+
+    @Test
+    public void TestKillBasic()
+    {
+        final int nking = 7;
+        final Float[] weights = {0.2f,0.1f,0.3f,0.2f,0.2f,0.0f,0.0f};
+
+        King[] kn = initKing(nking, weights);
+
+        System.out.println("Why Don't we kill Node 3");
+        // should be 0 (inconclusive weight followed by qn[0] queen)
+        kn[0].Start(0);
+        kn[1].Start(1);
+        kn[2].Start(0);
+        kn[3].Start(1);
+        kn[4].Start(0);
+        kn[5].Start(1);
+        kn[6].Start(0);
+
+        General.wait_millis(4000);
+        // Kill two process
+        kn[0].Kill();
+        kn[1].Kill();
+
+        waitn(kn, nking -2);
+
+        assertFalse("Expecting 0", kn[2].V != 0);
+        cleanup(kn);
+
+        System.out.println("... Passed");
+    }
     /*
     @Test
     public void TestDeaf(){
@@ -306,4 +342,41 @@ public class KingTest {
     }
 
     */
+
+    @Test
+    public void TestByzantineBasic()
+    {
+        final int nqueen = 5;
+        final Float[] weights = {0.2f,0.2f,0.2f,0.2f,0.2f};
+
+        Byzantine.ByzanType assignedType;
+        int node;
+
+        Random rand = new Random(2222);
+
+        System.out.println("Byzantine Test");
+
+        for(int i = 0; i < 15; i++){
+            King[] qn = initKing(nqueen, weights);
+
+            qn[0].Start(0);
+            qn[1].Start(1);
+            qn[2].Start(0);
+            qn[3].Start(1);
+            qn[4].Start(0);
+
+            // wait for somewhere between 1 and 15 seconds
+            General.wait_millis((rand.nextInt(15)+1)*1000);
+            assignedType = Byzantine.get_random_byzantine_type(rand.nextInt(5));
+            node = rand.nextInt(nqueen);
+            qn[node].set_byzantine(assignedType);
+            System.out.println("Set Node "+node+" to byzatine type "+assignedType);
+
+            waitn(qn, nqueen -1);
+
+            cleanup(qn);
+        }
+
+
+    }
 }
