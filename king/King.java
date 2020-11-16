@@ -406,17 +406,17 @@ public class King implements MessageRMI, Runnable {
         Message msg;
         Integer newVal;
 
-        boolean amiking = (this.me == Anchor[this.localState.get_current_iteration()] &&
+        boolean amiqueen = (this.me == Anchor[this.localState.get_current_iteration()] &&
                 this.localState.get_current_phase() == 3);
         // send to everybody
         for(int i = 0; i < ports.length; i++){
             // this will only change value if there is a byzantine setting
-            newVal = byz.Byzantine_Filter(val, i, amiking);
-            if(newVal == null || val != newVal) {
+            newVal = byz.Byzantine_Filter(val, i, amiqueen);
+            if(val != newVal) {
                 System.out.println("Node "+this.me+" sends altered message val "+
                         newVal+" from original "+val+".");
             }
-            if(newVal != null){
+            if(newVal != -1){
                 msg = new Message(this.me, newVal);
                 Call("Send",msg,i);
             }

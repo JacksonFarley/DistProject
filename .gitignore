@@ -1,0 +1,9 @@
+# Ignore object files and extra files from Intell
+# Java class files
+*.class
+# Generated files
+.idea/
+output/
+
+
+
