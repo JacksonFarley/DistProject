@@ -447,7 +447,7 @@ public class GradeCast implements MessageRMI, Runnable {
             }
         }
         else {
-            System.out.println("Message from "+msg.get_peer_id()+" already received in this phase");
+            System.out.println("Node " +this.me+" Filtered out a message from "+msg.get_peer_id());
         }
         
     }
@@ -476,7 +476,7 @@ public class GradeCast implements MessageRMI, Runnable {
         Integer newVal; 
 
         boolean amiqueen = (this.me == Anchor[this.localState.get_current_iteration()] &&
-                            this.localState.get_current_phase() == 2); 
+                            this.localState.get_current_phase() == 1); 
         // send to everybody
         for(int i = 0; i < ports.length; i++){
             // this will only change value if there is a byzantine setting
@@ -501,13 +501,13 @@ public class GradeCast implements MessageRMI, Runnable {
         Integer newVal; 
         Integer newConfidence; 
         boolean amiqueen = (this.me == Anchor[this.localState.get_current_iteration()] &&
-                            this.localState.get_current_phase() == 2); 
+                            this.localState.get_current_phase() == 1); 
         // send to everybody
         for(int i = 0; i < ports.length; i++){
             // this will only change value if there is a byzantine setting
             newVal = byz.Byzantine_Filter(val, i, amiqueen);
             // add byzantine filter for confidence too
-            newConfidence = confidence; 
+            newConfidence = byz.Byzantine_Confidence_Filter(confidence, i); 
             if(val != newVal) {
                 System.out.println("Node "+this.me+" sends altered message to "+i+
                                    " with val "+newVal+" from original "+val+"."); 
