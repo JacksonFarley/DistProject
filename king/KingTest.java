@@ -4,6 +4,7 @@ import general.Byzantine;
 import general.General;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Random;
 
 import static org.junit.Assert.assertFalse;
@@ -46,6 +47,25 @@ public class KingTest {
             if(to < 1000){
                 to = to * 2;
             }
+        }
+
+        int nd = ndecided(kn);
+        assertFalse("too few decided; ndecided=" + nd + " wanted=" + wanted, nd < wanted);
+    }
+
+    private void waitn_iter(King[] kn, int wanted, int num_iterations)
+    {
+        int to = 1000;
+        for(int i = 0; i < (10*num_iterations+5); i++){
+            if(ndecided(kn) >= wanted){
+                break;
+            }
+            try {
+                Thread.sleep(to);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+
         }
 
         int nd = ndecided(kn);
@@ -300,7 +320,109 @@ public class KingTest {
         }
     }
 
+    @Test
+    public void TestByzantineComplex()
+    {
+        final int nking = 10;
+        Float[] weights = new Float[10];
+        Arrays.fill(weights,0.1f);
 
+        Float[] weight_set0 = {0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f};
+        Float[] weight_set1 = {0.1f,0.1f,0.1f,0.2f,0.05f,0.05f,0.1f,0.1f,0.1f,0.1f};
+        Float[] weight_set2 = {0.075f,0.075f,0.06f,0.1f,0.075f,0.075f,0.1f,0.2f,0.14f,0.1f};
+        Float[] weight_set3 = {0.07f,0.075f,0.075f,0.1f,0.075f,0.075f,0.1f,0.2f,0.1f,0.13f};
+
+        Float[][] weight_master = {weight_set0, weight_set1,weight_set2,weight_set3};
+        Float weight_byzantine;
+        Byzantine.ByzanType assignedType;
+        int node;
+
+        Random rand = new Random(3333);
+
+        System.out.println("Byzantine Complex Test");
+
+        for(int i = 0; i < 10; i++){
+            System.out.println("\nRound "+i);
+            Float[] weight_selected = weight_master[rand.nextInt(4)];
+            weight_byzantine = 0.0f;
+            King[] kn = initKing(nking, weight_selected);
+
+            kn[0].Start(rand.nextInt(2));
+            kn[1].Start(rand.nextInt(2));
+            kn[2].Start(rand.nextInt(2));
+            kn[3].Start(rand.nextInt(2));
+            kn[4].Start(rand.nextInt(2));
+            kn[5].Start(rand.nextInt(2));
+            kn[6].Start(rand.nextInt(2));
+            kn[7].Start(rand.nextInt(2));
+            kn[8].Start(rand.nextInt(2));
+            kn[9].Start(rand.nextInt(2));
+
+            // wait for somewhere between 1 and 15 seconds
+            General.wait_millis((rand.nextInt(15)+1)*1000);
+            assignedType = Byzantine.get_random_byzantine_type(rand.nextInt(5));
+            node = rand.nextInt(nking);
+            weight_byzantine = weight_byzantine + weight_selected[node];
+            while(weight_byzantine < 1.0f/4.0f){
+                kn[node].set_byzantine(assignedType);
+                System.out.println("Set Node "+node+" to byzatine type "+assignedType);
+                assignedType = Byzantine.get_random_byzantine_type(rand.nextInt(5));
+                node = rand.nextInt(nking);
+                weight_byzantine = weight_byzantine + weight_selected[node];
+            }
+
+            waitn_iter(kn, nking, 4);
+
+            cleanup(kn);
+            System.out.println("Round Cleared");
+        }
+
+        System.out.println("...Passed");
+    }
+
+    @Test
+    public void TestCoordinatedByzantineAttack()
+    {
+        final int nking = 9;
+        Float[] weights = new Float[nking];
+        Arrays.fill(weights,1.0f/nking);
+
+        Byzantine.ByzanType assignedType;
+
+        System.out.println("Byzantine Coordinated Attack");
+
+        for(int i = 0; i < 6; i++){
+            System.out.println("\nRound "+i);
+            King[] kn = initKing(nking, weights);
+
+            kn[0].Start(0);
+            kn[1].Start(1);
+            kn[2].Start(0);
+            kn[3].Start(1);
+            kn[4].Start(0);
+            kn[5].Start(1);
+            kn[6].Start(0);
+            kn[7].Start(1);
+            kn[8].Start(0);
+
+            // wait for somewhere between 1 and 15 seconds
+            General.wait_millis(1000);
+            if(i == 5) {
+                kn[0].Kill();
+                kn[1].Kill();
+                System.out.println("Kill 2");
+            }else{
+                assignedType = Byzantine.get_random_byzantine_type(i);
+                kn[0].set_byzantine(assignedType);
+                kn[1].set_byzantine(assignedType);
+                System.out.println("Set to byzatine type "+assignedType);
+            }
+
+            waitn_iter(kn, nking -2, 4);
+
+            cleanup(kn);
+        }
+    }
 
 
 }
