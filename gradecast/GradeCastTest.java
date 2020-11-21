@@ -83,6 +83,7 @@ public class GradeCastTest {
     */
 
     private void cleanup(GradeCast[] gc){
+        General.wait_millis(1000);
         for(int i = 0; i < gc.length; i++){
             if(gc[i] != null){
                 gc[i].Kill();
@@ -324,8 +325,11 @@ public class GradeCastTest {
         Random rand = new Random(3333); 
 
         System.out.println("Byzantine Complex Test");
+        int numRounds = 5; 
 
-        for(int i = 0; i < 1; i++){
+        for(int i = 0; i < numRounds; i++){
+
+            System.out.println("\nRound "+i+"/"+numRounds);
             Float[] weight_selected = weight_master[rand.nextInt(4)];
             weight_byzantine = 0.0f;
             GradeCast[] gc = initGradeCast(nqueen, weight_selected);
@@ -356,10 +360,11 @@ public class GradeCastTest {
             
             waitn_iter(gc, nqueen, 4);
 
+            System.out.println("Round cleared");
             cleanup(gc); 
         }
 
-
+        System.out.println("...Passed");
     }
 
     @Test 
@@ -374,7 +379,7 @@ public class GradeCastTest {
         System.out.println("Byzantine Coordinated Attack");
 
         for(int i = 0; i < 6; i++){
-            System.out.println("\nRound "+i);
+            System.out.println("\nRound "+i+"/6");
             GradeCast[] gc = initGradeCast(nqueen, weights);
 
             gc[0].Start(0);
@@ -406,7 +411,9 @@ public class GradeCastTest {
             waitn_iter(gc, nqueen -3, 4);
 
             cleanup(gc); 
+            System.out.println("Round Cleared");
         }
+        System.out.println("...Passed");
     }
 
 

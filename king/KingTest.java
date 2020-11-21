@@ -78,6 +78,7 @@ public class KingTest {
     }
 
     private void cleanup(King[] kn){
+        General.wait_millis(1000);
         for(int i = 0; i < kn.length; i++){
             if(kn[i] != null){
                 kn[i].Kill();
@@ -340,9 +341,9 @@ public class KingTest {
         Random rand = new Random(3333);
 
         System.out.println("Byzantine Complex Test");
-
-        for(int i = 0; i < 10; i++){
-            System.out.println("\nRound "+i);
+        int numRounds = 10; 
+        for(int i = 0; i < numRounds; i++){
+            System.out.println("\nRound "+i+"/"+numRounds);
             Float[] weight_selected = weight_master[rand.nextInt(4)];
             weight_byzantine = 0.0f;
             King[] kn = initKing(nking, weight_selected);

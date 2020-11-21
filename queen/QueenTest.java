@@ -83,6 +83,7 @@ public class QueenTest {
     */
 
     private void cleanup(Queen[] qn){
+        General.wait_millis(1000);
         for(int i = 0; i < qn.length; i++){
             if(qn[i] != null){
                 qn[i].Kill();
@@ -320,11 +321,11 @@ public class QueenTest {
         int node;
 
         Random rand = new Random(3333); 
-
+        int numRounds = 10;
         System.out.println("Byzantine Complex Test");
 
-        for(int i = 0; i < 10; i++){
-            System.out.println("\nRound "+i);
+        for(int i = 0; i < numRounds; i++){
+            System.out.println("\nRound "+i+"/"+numRounds);
             Float[] weight_selected = weight_master[rand.nextInt(4)];
             weight_byzantine = 0.0f;
             Queen[] qn = initQueen(nqueen, weight_selected);
